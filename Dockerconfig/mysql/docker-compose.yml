@@ -1,0 +1,14 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-phobos
+    env_file:
+      - .env
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-phobos-data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+volumes:
+  mysql-phobos-data:

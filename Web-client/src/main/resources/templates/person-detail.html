@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Информация о сотруднике</title>
+    <script>
+        // Передача токена в глобальную переменную, так как
+        // сервер ресурсов не умеет работать с сессиями.
+        const jwtToken = '[[${jwtToken}]]';
+        sessionStorage.setItem('jwtToken', jwtToken);
+    </script>
+
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/style-detail.css}">
+</head>
+<body>
+
+<div class="container">
+    <input type="hidden" id="personId" th:value="${person.tabNo}">
+
+    <!-- Верхняя секция -->
+    <div class="top-section">
+        <!-- Блок с фото и кнопками управления -->
+        <div class="photo-section">
+            <img th:if="${person.photos != null and !person.photos.isEmpty()}"
+                 th:src="${person.photos[0]}"
+                 alt="Фото сотрудника"
+                 class="employee-photo">
+            <img th:if="${person.photos == null or person.photos.isEmpty()}"
+                 src="/api/web-service/static/images/no-photo.png"
+                 alt="Фото отсутствует"
+                 class="employee-photo">
+
+            <div class="photo-buttons">
+                <button th:onclick="|previousPhoto(${person.tabNo})|">&laquo;</button>
+                <button th:if="${userPermissions.contains('delete')}" th:onclick="|deletePhoto(${person.tabNo})|" class="button delete-btn">x</button>
+                <button th:if="${userPermissions.contains('update')}" th:onclick="|addPhoto(${person.tabNo})|">+</button>
+                <button th:onclick="|nextPhoto(${person.tabNo})|">&raquo;</button>
+            </div>
+        </div>
+        <!-- Информационный блок -->
+        <div class="info-section">
+            <h2>Информация о сотруднике</h2>
+            <p><strong>Таб. номер:</strong> <span th:text="${person.tabNo ?: 'Не указан'}"></span></p>
+            <p><strong>Имя:</strong> <span th:text="${person.firstName ?: 'Не указано'}"></span></p>
+            <p><strong>Фамилия:</strong> <span th:text="${person.lastName ?: 'Не указана'}"></span></p>
+            <p><strong>Отчество:</strong> <span th:text="${person.middleName ?: 'Не указано'}"></span></p>
+            <p><strong>Дата рождения:</strong> <span th:text="${person.formatDateTime() ?: 'Не указана'}"></span></p>
+            <p><strong>Пол:</strong> <span th:text="${person.gender ?: 'Не указан'}"></span></p>
+            <p><strong>Объекты:</strong>
+                <span th:if="${person.objects != null and !person.objects.isEmpty()}" th:each="obj : ${person.objects}" th:text="${obj} + ' '"></span>
+                <span th:if="${person.objects == null or person.objects.isEmpty()}">Нет объектов</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Таблицы зависимостей -->
+    <div class="tables-section">
+        <!-- Таблица телефонов -->
+        <h3>Телефоны</h3>
+        <table class="table-style">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Номер</th>
+                <th>Тип</th>
+                <th>Описание</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="phone : ${person.phones}" th:if="${person.phones != null and !person.phones.isEmpty()}">
+                <td th:text="${phone.id}"></td>
+                <td th:text="${phone.number}"></td>
+                <td th:text="${phone.type}"></td>
+                <td th:text="${phone.description ?: 'Нет описания'}"></td>
+                <td>
+                    <button th:if="${userPermissions.contains('update')}" th:onclick="|deletePhone(${phone.id})|" class="button delete-btn">X</button>
+                </td>
+            </tr>
+            <tr th:if="${person.phones == null or person.phones.isEmpty()}">
+                <td colspan="5">Список телефонов пуст</td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Поле для добавления телефона -->
+        <div class="phone-input-section">
+            <label for="phoneSearch">Добавить телефон:</label>
+            <input type="text" id="phoneSearch" placeholder="Введите номер телефона">
+<!--            <input type="hidden" id="personId" th:value="${person.tabNo}">-->
+            <ul id="phoneSuggestions" class="suggestions"></ul>
+        </div>
+
+
+        <!-- Таблица расписаний -->
+        <h3>Расписания</h3>
+        <table class="table-style">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Детали</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Существующие расписания -->
+            <tr th:each="schedule : ${person.workSchedules}" th:if="${person.workSchedules != null and !person.workSchedules.isEmpty()}">
+                <td th:text="${schedule.id}"></td>
+                <td th:text="${schedule.scheduleDetails ?: 'Нет деталей'}"></td>
+                <td>
+                    <button th:if="${userPermissions.contains('update')}" th:onclick="|deleteSchedule(${schedule.id})|" class="button delete-btn">X</button>
+                </td>
+            </tr>
+            <!-- Сообщение об отсутствии расписаний -->
+            <tr th:if="${person.workSchedules == null or person.workSchedules.isEmpty()}">
+                <td colspan="3">Список расписаний пуст</td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Добавление нового расписания -->
+        <table>
+            <tr>
+                <td colspan="2">
+                    <select id="availableSchedules">
+                        <option th:each="schedule : ${availableSchedules}"
+                                th:value="${schedule.id}"
+                                th:text="${schedule.scheduleDetails}"></option>
+                    </select>
+                </td>
+                <td>
+                    <button onclick="addSchedule()">Добавить</button>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Таблица адресов -->
+        <h3>Адреса</h3>
+        <table class="table-style">
+            <thead>
+            <tr>
+                <th>Почтовый код</th>
+                <th>Город</th>
+                <th>Улица</th>
+                <th>Описание</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="address : ${person.addresses}" th:if="${person.addresses != null and !person.addresses.isEmpty()}">
+                <td th:text="${address.postalCode ?: 'Не указан'}"></td>
+                <td th:text="${address.city ?: 'Не указан'}"></td>
+                <td th:text="${address.street ?: 'Не указана'}"></td>
+                <td th:text="${address.description ?: 'Нет описания'}"></td>
+                <td>
+                    <button th:if="${userPermissions.contains('update')}"
+                            th:attr="data-postal-code=${address.postalCode},
+                                    data-city=${address.city},
+                                    data-street=${address.street},
+                                    data-description=${address.description}"
+                            onclick="deleteAddress(this)" class="button delete-btn">X</button>
+                </td>
+            </tr>
+            <tr th:if="${person.addresses == null or person.addresses.isEmpty()}">
+                <td colspan="5">Список адресов пуст</td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Добавление нового адреса.-->
+        <table>
+            <tr>
+                <td><input type="text" id="postalCode" placeholder="Почтовый код" /></td>
+                <td><input type="text" id="city" placeholder="Город" /></td>
+                <td><input type="text" id="street" placeholder="Улица" /></td>
+                <td><input type="text" id="description" placeholder="Описание" /></td>
+                <td>
+                    <button th:onclick="|addAddress()|">Добавить</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Кнопка назад -->
+    <div class="back-button">
+        <button onclick="history.back()" class="return-button">Назад</button>
+    </div>
+</div>
+
+<script th:src="@{/api/web-service/static/js/person-details.js}"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+POST http://localhost:9070/api/logger/store
+Authorization: Bearer eyJraWQiOiJkNTk5M2EzNi04M2RhLTQxYTUtYTE2ZC1jODcwODE4ZTRlZmYiLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiJhcG1pZCIsImF1ZCI6ImFwbWlkIiwibmJmIjoxNzM0Nzg1ODYwLCJzY29wZSI6WyJyZWFkIiwid3JpdGUiXSwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDkwIiwiZXhwIjoxNzM0Nzg3NjYwLCJpYXQiOjE3MzQ3ODU4NjAsImp0aSI6ImNiNTYyMzZmLTExMjItNDI4OC1hZWNkLTI5NmE4ZWMzNWU1MCIsImF1dGhvcml0aWVzIjpbIlJPTEVfU0VSVklDRSJdfQ.HupfV5CXi1Z_sohofnEZIU5iBYtOxTVDL01PgyWjWm1UQ1m0e2dfA4ry7FN_keYno2h85csYpb7BnAeDLQWS6H_gsvNFJ3X7SwF0j6vQs5EGWkhyN2HENIKrUWinM1vJQQanvVTpjbc4SMlprEo0H-qdJ5OAcJrUsmxmnvrOJxQfRxf0riZiTZhgU1QK8LmdIuZzTdShwvc_j_GNEP-cLhX6A1TIQKPQ5I8CE7-MhpQCQho3wM_NrmBe4PRQf9Ie_DN7rqS0czGgNq5E2dlSge73NTsDIvTAq4I_uryBlcouS7tAFm3wnA58OKX5kKAYtikNn4tdxyuoni04_mYZ5w
+Content-Type: application/json
+
+{
+  "repeater": 1,
+  "key": 69,
+  "codeOp": 112,
+  "param1": 0,
+  "param2": 0,
+  "date": "2024-12-21T12:02:58.107658400"
+}

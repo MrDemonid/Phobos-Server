@@ -1,0 +1,66 @@
+server:
+  port: 9050
+
+spring:
+  application:
+    name: "TRANSFER-SERVICE"
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8090} # сервер аутентификации
+      authorization:
+        client-id: "apmid"
+        client-secret: "hren-ugadaesh"
+        scope: "write read"
+      # куда переправляем данные от оборудования
+      outer:
+        url: ${TRANSFER_EXTERNAL_URI:http://localhost:4310/api/get-event}
+
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true  # включение повторных попыток при недоступности сервисов
+      healthCheck:
+        enabled: true  # включение проверки состояния для сервисов
+
+  # Cloud Bus + RabbitMQ
+    bus:
+      enabled: true
+      amqp:
+        enabled: true
+        host: localhost
+        port: 5672
+        username: guest
+        password: guest
+  amqp:
+    enabled: true
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+
+# Эврика
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:7777/eureka}
+    register-with-eureka: true                # Регистрация клиента в Eureka Server
+    fetch-registry: true                      # Извлечение реестра из Eureka Server
+    retry-on-connect-errors: true             # Повторные подключения к Eureka при сбоях
+  instance:
+    prefer-ip-address: false                  # Использовать IP-адрес вместо имени хоста
+    lease-renewal-interval-in-seconds: 10     # Интервал отправки heartbeats
+    lease-expiration-duration-in-seconds: 30  # Таймаут для истечения lease (сердцебиений)
+
+app:
+  config:
+    wait-time: 4000     # время ожидания до следующей попытки, если какой-то микросервис недоступен
+    apm-buf-size: 500  # размер очереди сообщений на АРМ
+    dev-buf-size: 1000  # размер очереди сообщений на удаленные устройства

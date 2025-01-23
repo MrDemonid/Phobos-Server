@@ -1,0 +1,151 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.container {
+    display: flex;
+    flex-direction: column; /* Все основные секции идут вертикально */
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+h2, h3 {
+    color: #4CAF50;
+    margin-bottom: 10px;
+}
+
+.top-section {
+    display: flex; /* Горизонтальное расположение фото и информации */
+    margin-bottom: 20px; /* Отступ от секции таблиц */
+}
+
+.photo-section {
+    flex: 0 0 400px; /* Фиксированная ширина для фото */
+    text-align: center;
+    margin-right: 20px; /* Отступ справа от фото */
+}
+
+.employee-photo {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+}
+
+.photo-buttons button {
+    margin: 5px;
+}
+
+.info-section {
+    flex: 1; /* Занимает оставшееся пространство */
+}
+
+.tables-section {
+    width: 100%; /* Таблицы на всю ширину контейнера */
+    margin-top: 20px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+table th, table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+table th {
+    background-color: #f2f2f2;
+    color: #333;
+}
+
+table td {
+    font-size: 16px; /* Уменьшенный размер шрифта ячеек таблиц */
+}
+
+.back-button {
+    text-align: center;
+    margin-top: 20px;
+}
+
+button {
+    padding: 5px 10px;
+    background-color: #4CAF50;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+.return-button {
+    padding: 10px 15px;
+    color: white;
+    background-color: #007bff;
+    text-decoration: none;
+}
+
+.return-button:hover {
+    background-color: #0056b3;
+}
+
+/* Список подсказок для выбора телефонов */
+.suggestions {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    position: absolute;
+    width: 300px;
+    z-index: 1000;
+}
+
+.suggestions li {
+    padding: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.suggestions li:hover {
+    background-color: #20a5bd;
+}
+
+.suggestions li {
+    padding: 8px;
+    cursor: pointer;
+    background-color: #84b2ba;
+}
+
+/* Классы для расцветки таблиц */
+.table-style {
+    background-color: #7fb1b5;
+}
+
+.table-style th {
+    background-color: #abb57f;
+}

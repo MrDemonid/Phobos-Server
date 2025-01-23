@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Список объектов</title>
+    <script>
+        // Передача токена в глобальную переменную, так как
+        // сервер ресурсов не умеет работать с сессиями.
+        const jwtToken = '[[${jwtToken}]]';
+        sessionStorage.setItem('jwtToken', jwtToken);
+    </script>
+
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/style.css}">
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/filter.css}">
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/pagenator.css}">
+    <script th:src="@{/api/web-service/static/js/objects.js}"></script>
+</head>
+<body>
+<h1>Список объектов</h1>
+
+<div class="filter-container">
+    <form th:action="@{/api/web-service/objects}" method="get">
+        <div class="filter-row">
+            <label for="elemsOfPage">Элементов на странице:</label>
+            <select id="elemsOfPage" name="elemsOfPage">
+                <option th:each="r : ${listPageSizes}" th:value="${r}" th:text="${r}"
+                        th:selected="${elemsOfPage == r}"></option>
+            </select>
+
+            <!-- Кнопка "Обновить" -->
+            <div style="text-align: center;">
+                <button type="submit" class="button">Обновить</button>
+            </div>
+        </div>
+
+        <div class="filter-row">
+            <div>
+                <label for="fromId">Начальный объект:</label>
+                <input type="text" id="fromId" name="fromId" th:value="${fromId}" placeholder="Начальный номер объекта">
+            </div>
+            <div>
+                <label for="toId">Конечный объект:</label>
+                <input type="text" id="toId" name="toId" th:value="${toId}" placeholder="Конечный номер объекта">
+            </div>
+        </div>
+    </form>
+</div>
+
+
+<table>
+    <thead>
+    <tr>
+        <th>№ объекта</th>
+        <th>Описание</th>
+        <th>Адрес</th>
+        <th>Телефоны</th>
+        <th>Ответственные лица</th>
+        <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="object : ${objects}" th:id="'row-' + ${object.id}">
+        <td class="details-column">
+            <span th:id="'text-objectId-' + ${object.id}" th:text="${object.id}"></span>
+            <input th:id="'input-objectId-' + ${object.id}" type="text" th:value="${object.id}" class="edit-input" style="display: none;">
+        </td>
+        <td class="details-column">
+            <span th:id="'text-description-' + ${object.id}" th:text="${object.description}"></span>
+            <input th:id="'input-description-' + ${object.id}" type="text" th:value="${object.description}" class="edit-input" style="display: none;">
+        </td>
+        <td class="details-column">
+            <span th:id="'text-address-' + ${object.id}" th:text="${object.address}"></span>
+            <input th:id="'input-address-' + ${object.id}" type="text" th:value="${object.address}" class="edit-input" style="display: none;">
+        </td>
+
+        <td class="details-column phones-column">
+            <span th:id="'text-phonesList-' + ${object.id}" th:text="${object.phonesList}"></span>
+            <input th:id="'input-phonesList-' + ${object.id}" type="text" th:value="${object.phonesList}" class="edit-input" style="display: none;">
+        </td>
+        <td class="details-column persons-column">
+            <span th:id="'text-personsList-' + ${object.id}" th:text="${object.personsList}"></span>
+            <input th:id="'input-personsList-' + ${object.id}" type="text" th:value="${object.personsList}" class="edit-input" style="display: none;">
+        </td>
+
+        <td class="actions-column">
+            <div class="action-buttons">
+                <button th:id="'edit-btn-' + ${object.id}"
+                        th:if="${userPermissions.contains('update')}"
+                        th:attr="onclick='editRowObject(' + ${object.id} + ')'"
+                        class="button edit-btn">Edit</button>
+                <button th:id="'save-btn-' + ${object.id}"
+                        th:if="${userPermissions.contains('update')}"
+                        th:attr="onclick='saveRowObject(' + ${object.id} + ')'"
+                        class="button" style="display: none;">Save</button>
+                <button th:id="'delete-btn-' + ${object.id}"
+                        th:if="${userPermissions.contains('delete')}"
+                        th:attr="onclick='deleteRowObject(' + ${object.id} + ')'"
+                        class="button delete-btn">Delete</button>
+                <button th:id="'cancel-btn-' + ${object.id}"
+                        th:if="${userPermissions.contains('update')}"
+                        th:attr="onclick='cancelEditObject(' + ${object.id} + ')'"
+                        class="button cancel-btn" style="display: none;">Cancel</button>
+                <a th:href="@{'/api/web-service/object/detail/' + ${object.id}}" class="button details-btn">Подробнее</a>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div class="add-new-container">
+    <input id="new-objectId" type="text" placeholder="Номер объекта">
+    <input id="new-description" type="text" placeholder="Описание">
+    <input id="new-address" type="text" placeholder="Адрес">
+    <button th:if="${userPermissions.contains('write')}" class="button" onclick="addNewObject()">Add</button>
+</div>
+
+<div class="pagination-container">
+    <!-- Кнопка "Back" -->
+    <div class="back-button-container">
+        <a href="/api/web-service" class="button">Назад</a>
+    </div>
+
+    <!-- Пагинатор. Для отправки данных тек. страницы и фильтра, применяем скрытые поля форм -->
+    <div class="pagination" th:with="startPage=${currentPage > 5 ? currentPage - 5 : 0},
+                                     endPage=${totalPages > currentPage + 5 ? currentPage + 5 : totalPages - 1}">
+        <ul>
+            <!-- Кнопка "Previous" -->
+            <li th:if="${currentPage > 0}">
+                <form th:action="@{/api/web-service/objects}" method="get" style="display: inline;">
+                    <input type="hidden" name="elemsOfPage" th:value="${elemsOfPage}">
+                    <input type="hidden" name="pageNo" th:value="${currentPage - 1}">
+                    <input type="hidden" name="fromId" th:value="${fromId}">
+                    <input type="hidden" name="toId" th:value="${toId}">
+                    <button type="submit" class="pagination-button">Previous</button>
+                </form>
+            </li>
+
+            <!-- Номера страниц -->
+            <li th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                <form th:action="@{/api/web-service/objects}" method="get" style="display: inline;">
+                    <input type="hidden" name="elemsOfPage" th:value="${elemsOfPage}">
+                    <input type="hidden" name="pageNo" th:value="${i}">
+                    <input type="hidden" name="fromId" th:value="${fromId}">
+                    <input type="hidden" name="toId" th:value="${toId}">
+                    <button type="submit"
+                            class="pagination-button"
+                            th:classappend="${currentPage == i} ? 'active' : ''"
+                            th:text="${i + 1}">
+                    </button>
+                </form>
+            </li>
+
+            <!-- Кнопка "Next" -->
+            <li th:if="${currentPage < totalPages - 1}">
+                <form th:action="@{/api/web-service/objects}" method="get" style="display: inline;">
+                    <input type="hidden" name="elemsOfPage" th:value="${elemsOfPage}">
+                    <input type="hidden" name="pageNo" th:value="${currentPage + 1}">
+                    <input type="hidden" name="fromId" th:value="${fromId}">
+                    <input type="hidden" name="toId" th:value="${toId}">
+                    <button type="submit" class="pagination-button">Next</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+</body>
+
+<script>
+
+
+</script>
+
+</html>

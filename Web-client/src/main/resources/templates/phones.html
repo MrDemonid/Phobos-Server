@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Список телефонов</title>
+    <script>
+        // Передача токена в глобальную переменную, так как
+        // сервер ресурсов не умеет работать с сессиями.
+        const jwtToken = '[[${jwtToken}]]';
+        sessionStorage.setItem('jwtToken', jwtToken);
+    </script>
+
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/style.css}">
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/filter.css}">
+    <script th:src="@{/api/web-service/static/js/phones.js}"></script>
+</head>
+<body>
+<h1>Список телефонов</h1>
+
+<div class="filter-container">
+    <form th:action="@{/api/web-service/phones}" method="get">
+        <div class="filter-row">
+            <!-- Поле для ввода номера телефона -->
+            <div>
+                <label for="phoneNumber">Номер телефона:</label>
+                <input type="text" id="phoneNumber" name="phoneNumber" th:value="${phoneNumber}" placeholder="Введите номер телефона">
+            </div>
+            <!-- Выпадающий список для выбора типа телефона -->
+            <div>
+                <label for="phoneType">Тип телефона:</label>
+                <select id="phoneType" name="phoneType">
+                    <!-- Пункт "Все" -->
+                    <option value="" th:selected="${selectedPhoneType == null}">Все</option>
+                    <!-- Динамические пункты -->
+                    <option th:each="type : ${phoneTypes}"
+                            th:value="${type.name()}"
+                            th:text="${type.description}"
+                            th:selected="${selectedPhoneType != null and selectedPhoneType == type.name()}">
+                    </option>
+                </select>
+            </div>
+
+            <div style="text-align: center;">
+                <button type="submit" class="button">Обновить</button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Номер</th>
+        <th>Описание</th>
+        <th>Тип</th>
+        <th>Действие</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="phone : ${phones}" th:id="'row-' + ${phone.id}">
+        <td th:text="${phone.id}"></td>
+        <td class="details-column">
+            <span th:id="'text-number-' + ${phone.id}" th:text="${phone.number}"></span>
+            <input th:id="'input-number-' + ${phone.id}" type="text" th:value="${phone.number}" class="edit-input" style="display: none;">
+        </td>
+        <td class="details-column">
+            <span th:id="'text-description-' + ${phone.id}" th:text="${phone.description}"></span>
+            <input th:id="'input-description-' + ${phone.id}" type="text" th:value="${phone.description}" class="edit-input" style="display: none;">
+        </td>
+        <td class="details-column">
+            <span th:id="'text-type-' + ${phone.id}" th:text="${phone.type.description}"></span>
+            <select th:id="'select-type-' + ${phone.id}" class="edit-select" style="display: none;">
+                <option th:each="type : ${T(mr.demonid.web.client.dto.PhoneType).values()}" th:value="${type}" th:text="${type.description}" th:selected="${phone.type == type}"></option>
+            </select>
+        </td>
+        <td class="actions-column">
+            <div class="action-buttons">
+                <button th:id="'edit-btn-' + ${phone.id}"
+                        th:if="${userPermissions.contains('update')}"
+                        th:attr="onclick='editRow(' + ${phone.id} + ')'"
+                        class="button edit-btn">Edit</button>
+                <button th:id="'save-btn-' + ${phone.id}"
+                        th:if="${userPermissions.contains('update')}"
+                        th:attr="onclick='saveRow(' + ${phone.id} + ')'"
+                        class="button" style="display: none;">Save</button>
+                <button th:id="'delete-btn-' + ${phone.id}"
+                        th:if="${userPermissions.contains('delete')}"
+                        th:attr="onclick='deleteRow(' + ${phone.id} + ')'"
+                        class="button delete-btn">Delete</button>
+                <button th:id="'cancel-btn-' + ${phone.id}"
+                        th:if="${userPermissions.contains('update')}"
+                        th:attr="onclick='cancelEdit(' + ${phone.id} + ')'"
+                        class="button cancel-btn" style="display: none;">Cancel</button>
+            </div>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<div class="add-new-container">
+    <input id="new-number" type="text" placeholder="Enter new phone number">
+    <input id="new-description" type="text" placeholder="Enter new phone description">
+    <select id="new-type">
+        <option th:each="type : ${T(mr.demonid.web.client.dto.PhoneType).values()}" th:value="${type}" th:text="${type.description}"></option>
+    </select>
+    <button th:if="${userPermissions.contains('write')}" class="button" onclick="addNewPhone()">Add</button>
+</div>
+<div class="button-container">
+    <a href="/api/web-service" class="button">Назад</a>
+</div>
+</body>
+</html>

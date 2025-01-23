@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Phobos-Server.iml" filepath="$PROJECT_DIR$/.idea/Phobos-Server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Notification-service/notification-service.iml" filepath="$PROJECT_DIR$/Notification-service/notification-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Resource-server/resource-server.iml" filepath="$PROJECT_DIR$/Resource-server/resource-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WebClient-server/web-client-server.iml" filepath="$PROJECT_DIR$/WebClient-server/web-client-server.iml" />
+    </modules>
+  </component>
+</project>

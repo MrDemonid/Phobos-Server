@@ -1,0 +1,46 @@
+server:
+  port: 9060
+
+spring:
+  application:
+    name: "RS232DEV-SERVICE"
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8090} # сервер аутентификации
+      authorization:
+        client-id: "apmid"
+        client-secret: "hren-ugadaesh"
+        scope: "write read"
+
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true  # включение повторных попыток при недоступности сервисов
+      healthCheck:
+        enabled: true  # включение проверки состояния для сервисов
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:7777/eureka}
+    register-with-eureka: true                # Регистрация клиента в Eureka Server
+    fetch-registry: true                      # Извлечение реестра из Eureka Server
+    retry-on-connect-errors: true             # Повторные подключения к Eureka при сбоях
+  instance:
+    prefer-ip-address: false                  # Использовать IP-адрес вместо имени хоста
+    lease-renewal-interval-in-seconds: 10     # Интервал отправки heartbeats
+    lease-expiration-duration-in-seconds: 30  # Таймаут для истечения lease (сердцебиений)
+
+# Настройки приложения.
+app:
+  properties:
+    aux-port: COM1      # номер порта RS232 к которому подключаемся
+    num-repeaters: 2    # кол-во ретрансляторов на АТС
+    wait-time: 1000     # время сна, после неудачной попытки получить сообщение от драйвера

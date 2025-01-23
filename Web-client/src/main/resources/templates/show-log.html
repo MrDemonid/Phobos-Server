@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Лог операций</title>
+    <script>
+        // Передача токена в глобальную переменную, так как
+        // сервер ресурсов не умеет работать с сессиями.
+        const jwtToken = '[[${jwtToken}]]';
+        sessionStorage.setItem('jwtToken', jwtToken);
+    </script>
+
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/style.css}">
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/filter.css}">
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/pagenator.css}">
+</head>
+<body>
+<h1>Лог операций</h1>
+
+<div class="filter-container">
+    <form th:action="@{/api/web-service/read-logger}" method="get">
+        <div class="filter-row">
+            <label for="elemsOfPage">Эл. на стр.:</label>
+            <select id="elemsOfPage" name="elemsOfPage">
+                <option th:each="r : ${listPageSizes}" th:value="${r}" th:text="${r}"
+                        th:selected="${elemsOfPage == r}"></option>
+            </select>
+            <div>
+                <label for="from">От:</label>
+                <input type="datetime-local" id="from" name="from" th:value="${from}">
+            </div>
+            <div>
+                <label for="to">До:</label>
+                <input type="datetime-local" id="to" name="to" th:value="${to}">
+            </div>
+            <div>
+                <label for="repeater">Ретранслятор:</label>
+                <select id="repeater" name="repeater" onchange="updateKeys()">
+                    <option value="-1" th:selected="${repeater == -1}">Все</option>
+                    <option th:each="r : ${repeaters}" th:value="${r}" th:text="${r}"
+                            th:selected="${repeater == r}"></option>
+                </select>
+            </div>
+            <div>
+                <label for="key-dropdown">Объект:</label>
+                <select id="key-dropdown" name="key">
+<!--                <select id="key-dropdown" name="key" onchange="updateHiddenKey()">-->
+                    <option value="-1" selected>Все</option>
+                </select>
+            </div>
+
+        <div style="text-align: center;">
+                <button type="submit" class="button">Обновить</button>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Ретранслятор</th>
+        <th>Ключ</th>
+        <th>Операция</th>
+        <th>Шлейф</th>
+        <th>Тип УО</th>
+        <th>Дата и время</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${items}">
+        <td th:text="${item.repeater}"></td>
+        <td th:text="${item.key}"></td>
+        <td th:text="${operationDescriptions[item.code]}"></td>
+        <td th:text="${item.line >= 0 ? item.line : ''}"></td>
+        <td th:text="${item.type >= 0 ? item.type : ''}"></td>
+        <td th:text="${item.formatDateTime()}"></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="pagination-container">
+    <!-- Кнопка "Back" -->
+    <div class="back-button-container">
+        <a href="/api/web-service" class="button">Назад</a>
+    </div>
+
+    <!-- Пагинатор. Для отправки данных тек. страницы и фильтра, применяем скрытые поля форм -->
+    <div class="pagination" th:with="startPage=${currentPage > 5 ? currentPage - 5 : 0},
+                                     endPage=${totalPages > currentPage + 5 ? currentPage + 5 : totalPages - 1}">
+        <ul>
+            <!-- Кнопка "Previous" -->
+            <li th:if="${currentPage > 0}">
+                <form th:action="@{/api/web-service/read-logger}" method="get" style="display: inline;">
+                    <input type="hidden" name="elemsOfPage" th:value="${elemsOfPage}">
+                    <input type="hidden" name="pageNo" th:value="${currentPage - 1}">
+                    <input type="hidden" name="repeater" th:value="${repeater}">
+                    <input type="hidden" name="key" th:value="${key}">
+                    <input type="hidden" name="from" th:value="${from}">
+                    <input type="hidden" name="to" th:value="${to}">
+                    <button type="submit" class="pagination-button">Previous</button>
+                </form>
+            </li>
+
+            <!-- Номера страниц -->
+            <li th:each="i : ${#numbers.sequence(startPage, endPage)}">
+                <form th:action="@{/api/web-service/read-logger}" method="get" style="display: inline;">
+                    <input type="hidden" name="elemsOfPage" th:value="${elemsOfPage}">
+                    <input type="hidden" name="pageNo" th:value="${i}">
+                    <input type="hidden" name="repeater" th:value="${repeater}">
+                    <input type="hidden" name="key" th:value="${key}">
+                    <input type="hidden" name="from" th:value="${from}">
+                    <input type="hidden" name="to" th:value="${to}">
+                    <button type="submit"
+                            class="pagination-button"
+                            th:classappend="${currentPage == i} ? 'active' : ''"
+                            th:text="${i + 1}">
+                    </button>
+                </form>
+            </li>
+
+            <!-- Кнопка "Next" -->
+            <li th:if="${currentPage < totalPages - 1}">
+                <form th:action="@{/api/web-service/read-logger}" method="get" style="display: inline;">
+                    <input type="hidden" name="elemsOfPage" th:value="${elemsOfPage}">
+                    <input type="hidden" name="pageNo" th:value="${currentPage + 1}">
+                    <input type="hidden" name="repeater" th:value="${repeater}">
+                    <input type="hidden" name="key" th:value="${key}">
+                    <input type="hidden" name="from" th:value="${from}">
+                    <input type="hidden" name="to" th:value="${to}">
+                    <button type="submit" class="pagination-button">Next</button>
+                </form>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        updateKeys();
+    });
+
+    function updateKeys() {
+        const repeaterSelect = document.getElementById('repeater');
+        const keyDropdown = document.getElementById('key-dropdown');
+        const selectedRepeater = parseInt(repeaterSelect.value, 10);
+
+        // Очистить текущее содержимое выпадающего списка
+        keyDropdown.innerHTML = '';
+
+        // Добавляем опцию "Все"
+        const allOption = document.createElement('option');
+        allOption.value = -1;
+        allOption.textContent = 'Все';
+        keyDropdown.appendChild(allOption);
+
+        // Вычисляем диапазон для keys
+        let startKey, endKey;
+        if (selectedRepeater < 0) {
+            startKey = 0;
+            endKey = 8 * 120 - 1;
+        } else {
+            startKey = (selectedRepeater - 1) * 120;
+            endKey = startKey + 119;
+        }
+
+        // Добавляем значения в выпадающий список
+        for (let i = startKey; i <= endKey; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = i;
+            keyDropdown.appendChild(option);
+        }
+    }
+
+</script>
+</body>
+</html>

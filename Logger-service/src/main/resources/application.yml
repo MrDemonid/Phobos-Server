@@ -1,0 +1,65 @@
+server:
+  port: 9070
+
+spring:
+  application:
+    name: "LOGGER-SERVICE"
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8090} # сервер аутентификации
+
+  cloud:
+    loadbalancer:
+      retry:
+        enabled: true  # включение повторных попыток при недоступности сервисов
+      healthCheck:
+        enabled: true  # включение проверки состояния для сервисов
+
+  # Spring Jpa Hibernate
+  jpa:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+        show_sql: false
+        format_sql: true
+        highlight_sql: true
+    #        globally_quoted_identifiers: true   # экранировать все идентификаторы (чтобы не было конфликта с именами полей и зарезервированными словами)
+    generate-ddl: true
+    defer-datasource-initialization: true
+    open-in-view: false
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/logger_phobos
+    username: root
+    password: root
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:7777/eureka}
+    register-with-eureka: true                # Регистрация клиента в Eureka Server
+    fetch-registry: true                      # Извлечение реестра из Eureka Server
+    retry-on-connect-errors: true             # Повторные подключения к Eureka при сбоях
+  instance:
+    prefer-ip-address: false                  # Использовать IP-адрес вместо имени хоста
+    lease-renewal-interval-in-seconds: 10     # Интервал отправки heartbeats
+    lease-expiration-duration-in-seconds: 30  # Таймаут для истечения lease (сердцебиений)
+
+#logging:
+#  level:
+#    org.hibernate.SQL: DEBUG
+#    org.hibernate.type.descriptor.sql: TRACE
+#    org:
+#      springframework:
+#        data:
+#          jpa:
+#            repository: DEBUG

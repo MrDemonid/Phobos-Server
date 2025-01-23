@@ -1,0 +1,91 @@
+server:
+  port: 9100
+
+spring:
+  application:
+    name: "NOTIFICATION-SERVICE"
+
+  output:
+    ansi:
+      enabled: ALWAYS
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${OAUTH2_ISSUER_URI:http://localhost:8090} # сервер аутентификации
+
+  # Cloud Bus + RabbitMQ
+  cloud:
+    bus:
+      enabled: true
+      amqp:
+        enabled: true
+        host: localhost
+        port: 5672
+        username: guest
+        password: guest
+  amqp:
+    enabled: true
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+  # H2 database
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:file:./databases/notify
+    username: sa
+    password:
+  # Spring Jpa Hibernate
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate.format_sql: true
+      hibernate.highlight_sql: true
+  #    defer-datasource-initialization: true           # дождаться создания таблиц Hibernate, прежде чем выполнять 'data.sql'
+  # автозапуск скриптов 'schema.sql' и 'data.sql'
+  sql:
+    init:
+      mode: never           # не нужен
+  # консоль для отладки
+  h2:
+    console:
+      enabled: true
+      path: /api/notification/h2-console
+      settings:
+        web-allow-others: false      # доступ только с локального адреса
+
+  # e-mail
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: andrey.nemo.an@gmail.com
+    password: ${GMAIL_PASSWORD}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+#        debug: true
+
+
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: ${EUREKA_SERVER_URL:http://localhost:7777/eureka}
+#    register-with-eureka: true                # Регистрация клиента в Eureka Server
+#    fetch-registry: true                      # Извлечение реестра из Eureka Server
+#    retry-on-connect-errors: true             # Повторные подключения к Eureka при сбоях
+#  instance:
+#    prefer-ip-address: false                  # Использовать IP-адрес вместо имени хоста
+#    lease-renewal-interval-in-seconds: 10     # Интервал отправки heartbeats
+#    lease-expiration-duration-in-seconds: 30  # Таймаут для истечения lease (сердцебиений)
+#

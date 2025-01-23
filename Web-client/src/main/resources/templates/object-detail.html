@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Информация об объекте</title>
+    <script>
+        // Передача токена в глобальную переменную, так как
+        // сервер ресурсов не умеет работать с сессиями.
+        const jwtToken = '[[${jwtToken}]]';
+        sessionStorage.setItem('jwtToken', jwtToken);
+    </script>
+
+    <link rel="stylesheet" th:href="@{/api/web-service/static/css/style-detail.css}">
+</head>
+<body>
+
+
+<div class="container">
+    <!-- Глоб. переменная с идентификатором текущего объекта-->
+    <input type="hidden" id="objectId" th:value="${object.id}">
+
+    <!-- Верхняя секция -->
+    <div class="top-section">
+        <!-- Блок с фото и кнопками управления -->
+        <div class="photo-section">
+            <img th:if="${object.photos != null and !object.photos.isEmpty()}"
+                 th:src="${object.photos[0]}"
+                 alt="Фото сотрудника"
+                 class="employee-photo">
+            <img th:if="${object.photos == null or object.photos.isEmpty()}"
+                 src="/api/web-service/static/images/no-photo.png"
+                 alt="Фото отсутствует"
+                 class="employee-photo">
+
+            <div class="photo-buttons">
+                <button th:onclick="|previousPhoto(${object.id})|">&laquo;</button>
+                <button th:if="${userPermissions.contains('delete')}" th:onclick="|deletePhoto(${object.id})|" class="button delete-btn">x</button>
+                <button th:if="${userPermissions.contains('update')}" th:onclick="|addPhoto(${object.id})|">+</button>
+                <button th:onclick="|nextPhoto(${object.id})|">&raquo;</button>
+            </div>
+        </div>
+        <!-- Информационный блок -->
+        <div class="info-section">
+            <h2>Информация об объекте</h2>
+            <p><strong>Номер объекта:</strong> <span th:text="${object.id ?: 'Не указан'}"></span></p>
+            <p><strong>Описание:</strong> <span th:text="${object.description ?: 'Не указано'}"></span></p>
+            <p><strong>Адрес:</strong> <span th:text="${object.address ?: 'Не указана'}"></span></p>
+        </div>
+    </div>
+
+    <!-- Таблицы зависимостей -->
+    <div class="tables-section">
+
+        <!-- Таблица ответственных лиц -->
+        <h3>Ответственные лица</h3>
+        <table class="table-style">
+            <thead>
+            <tr>
+                <th>Таб. номер</th>
+                <th>Фамилия</th>
+                <th>Имя</th>
+                <th>Отчество</th>
+                <th>День рождения</th>
+                <th>Пол</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="person : ${object.persons}" th:if="${object.persons != null and !object.persons.isEmpty()}">
+                <td th:text="${person.tabNo ?: 'Не указан'}"></td>
+                <td th:text="${person.lastName ?: 'Не указан'}"></td>
+                <td th:text="${person.firstName ?: 'Не указан'}"></td>
+                <td th:text="${person.middleName ?: 'Не указан'}"></td>
+                <td th:text="${person.birthDate ?: 'Не указан'}"></td>
+                <td th:text="${person.gender ?: 'Не указан'}"></td>
+                <td>
+                    <button th:if="${userPermissions.contains('update')}" th:onclick="|deletePersonFromObject(${person.tabNo})|" class="button delete-btn">X</button>
+                </td>
+            </tr>
+            <tr th:if="${object.persons == null or object.persons.isEmpty()}">
+                <td colspan="5">Список ответственных лиц пуст</td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Поле для добавления сотрудника -->
+        <div class="phone-input-section">
+            <label for="personObjectSearch">Добавить ответственное лицо:</label>
+            <input type="text" id="personObjectSearch" placeholder="Введите фамилию сотрудника">
+            <ul id="personObjectSuggestions" class="suggestions"></ul>
+        </div>
+
+
+        <!-- Таблица телефонов -->
+        <h3>Телефоны</h3>
+        <table class="table-style">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Номер</th>
+                <th>Тип</th>
+                <th>Описание</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="phone : ${object.phones}" th:if="${object.phones != null and !object.phones.isEmpty()}">
+                <td th:text="${phone.id}"></td>
+                <td th:text="${phone.number}"></td>
+                <td th:text="${phone.type}"></td>
+                <td th:text="${phone.description ?: 'Нет описания'}"></td>
+                <td>
+                    <button th:if="${userPermissions.contains('update')}" th:onclick="|deletePhoneFromObject(${phone.id})|" class="button delete-btn">X</button>
+                </td>
+            </tr>
+            <tr th:if="${object.phones == null or object.phones.isEmpty()}">
+                <td colspan="5">Список телефонов пуст</td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Поле для добавления телефона -->
+        <div class="phone-input-section">
+            <label for="phoneObjectsSearch">Добавить телефон:</label>
+            <input type="text" id="phoneObjectsSearch" placeholder="Введите номер телефона">
+            <ul id="phoneObjectSuggestions" class="suggestions"></ul>
+        </div>
+
+
+        <!-- Таблица расписаний -->
+        <h3>Расписания</h3>
+        <table class="table-style">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Детали</th>
+                <th>Действия</th>
+            </tr>
+            </thead>
+            <tbody>
+            <!-- Существующие расписания -->
+            <tr th:each="schedule : ${object.workSchedules}" th:if="${object.workSchedules != null and !object.workSchedules.isEmpty()}">
+                <td th:text="${schedule.id}"></td>
+                <td th:text="${schedule.scheduleDetails ?: 'Нет деталей'}"></td>
+                <td>
+                    <button th:if="${userPermissions.contains('update')}" th:onclick="|deleteScheduleFromObject(${schedule.id})|" class="button delete-btn">X</button>
+                </td>
+            </tr>
+            <!-- Сообщение об отсутствии расписаний -->
+            <tr th:if="${object.workSchedules == null or object.workSchedules.isEmpty()}">
+                <td colspan="3">Список расписаний пуст</td>
+            </tr>
+            </tbody>
+        </table>
+        <!-- Добавление нового расписания -->
+        <table>
+            <tr>
+                <td colspan="2">
+                    <select id="availableSchedules">
+                        <option th:each="schedule : ${availableSchedules}"
+                                th:value="${schedule.id}"
+                                th:text="${schedule.scheduleDetails}"></option>
+                    </select>
+                </td>
+                <td>
+                    <button onclick="addScheduleToObject()">Добавить</button>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+    <!-- Кнопка назад -->
+    <div class="back-button">
+        <button onclick="history.back()" class="return-button">Назад</button>
+    </div>
+</div>
+
+<script th:src="@{/api/web-service/static/js/object-details.js}"></script>
+</body>
+</html>
