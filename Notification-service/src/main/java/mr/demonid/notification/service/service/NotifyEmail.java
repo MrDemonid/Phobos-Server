@@ -1,6 +1,7 @@
 package mr.demonid.notification.service.service;
 
 import mr.demonid.notification.service.domain.NotifyTarget;
+import mr.demonid.notification.service.domain.NotifyType;
 import mr.demonid.notification.service.dto.NotificationRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +23,12 @@ public class NotifyEmail {
 
 
     public void notifyEmail(NotifyTarget target, NotificationRequest message) {
-        log.info("Sending email to {}, body: {}", target.getEmail(), message);
-        String text = "Information: " + target.getNotificationType().toString() + ", message: " + message;
-        emailService.sendEmail(target.getEmail(), "Alarm notification", text);
+        NotifyType msgType = NotifyType.fromCode(message.getCode());
+        if (msgType == target.getNotificationType()) {
+            log.info("Sending email to {}, body: {}", target.getEmail(), message);
+            String text = "Information: " + target.getNotificationType().toString() + ", message: " + message;
+            emailService.sendEmail(target.getEmail(), "Alarm notification " + target.getKey() + ":" + target.getNotificationType(), text);
+        }
     }
 
 }
