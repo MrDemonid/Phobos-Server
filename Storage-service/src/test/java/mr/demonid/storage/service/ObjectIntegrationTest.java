@@ -2,13 +2,12 @@ package mr.demonid.storage.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.MediaType;
-import mr.demonid.storage.service.domain.WorkSchedule;
-import mr.demonid.storage.service.dto.WorkScheduleDTO;
-import mr.demonid.storage.service.exceptions.BadScheduleException;
+import mr.demonid.storage.service.domain.ObjectEntity;
+import mr.demonid.storage.service.dto.ObjectEntityDTO;
 import mr.demonid.storage.service.repository.ObjectEntityRepository;
 import mr.demonid.storage.service.repository.PersonRepository;
 import mr.demonid.storage.service.repository.WorkScheduleRepository;
-import mr.demonid.storage.service.services.WorkScheduleService;
+import mr.demonid.storage.service.services.ObjectEntityService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,20 +19,24 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.*;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-
 /**
- * Проверяем работу сервиса WorkScheduleService
+ * Проверяем работу REST-контроллера ObjectController.
+ * Для тестов подключаем базу данных H2 и эмитируем контекст безопасности.
  */
 @SpringBootTest
 @ActiveProfiles("test")
-public class WorkScheduleIntegrationTest {
+public class ObjectIntegrationTest {
     @Autowired
     private WebApplicationContext context;
 
@@ -41,16 +44,16 @@ public class WorkScheduleIntegrationTest {
 
     // репозитории
     @Autowired
-    private WorkScheduleRepository repository;
+    private WorkScheduleRepository workScheduleRepository;
     @Autowired
-    private ObjectEntityRepository objectEntityRepository;
+    private ObjectEntityRepository repository;
     @Autowired
     private PersonRepository personRepository;
 
     @Autowired
-    WorkScheduleService service;
+    private ObjectEntityService service;
 
-    WorkSchedule workSchedule;
+    private ObjectEntity objectEntity;
 
     @BeforeEach
     public void setup() {
@@ -61,18 +64,18 @@ public class WorkScheduleIntegrationTest {
 
         repository.deleteAll();
         // заносим в БД тестовые данные
-        workSchedule = repository.save(new WorkSchedule(null, "test schedule", null, null));
+        objectEntity = repository.save(new ObjectEntity(50L, "description", "K-5", null, null, null, null));
     }
 
     /**
-     * Тест добавления объекта в базу данных.
-     * На входе: корректные данные.
+     * Тестирует эндпоинт создания нового объекта.
+     * На входе: корректные параметры.
      */
     @Test
-    public void testCreateWorkSchedule() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(null, "test details", null, null);
+    public void objectCreateWithSuccess() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(43L, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(post("/api/storage/schedule")
+        mockMvc.perform(post("/api/storage/objects/create")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_write"),
@@ -82,19 +85,20 @@ public class WorkScheduleIntegrationTest {
                         .content(new ObjectMapper().writeValueAsString(dto))
                 )
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.scheduleDetails").value(dto.getScheduleDetails()));
+                .andExpect(jsonPath("$.id").value(43L))
+                .andExpect(jsonPath("$.description").value(dto.getDescription()))
+                .andExpect(jsonPath("$.address").value(dto.getAddress()));
     }
 
     /**
-     * Тест добавления объекта в базу данных.
-     * На входе: уже существующий объект.
+     * Тестирует эндпоинт создания нового объекта.
+     * На входе: не корректный Id.
      */
     @Test
-    public void testCreateWorkScheduleWithBadId() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(workSchedule.getId(), "new test details", null, null);
+    public void objectCreateBadId() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(null, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(post("/api/storage/schedule")
+        mockMvc.perform(post("/api/storage/objects/create")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_write"),
@@ -106,16 +110,17 @@ public class WorkScheduleIntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+
     /**
-     * Тест добавления объекта в базу данных.
+     * Тестирует эндпоинт создания нового объекта.
      * На входе: не аутентифицированный пользователь
      */
     @Test
     @WithAnonymousUser
-    public void testCreateWorkScheduleWithAnonymousUser() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(null, "test details", null, null);
+    public void objectCreateIfNotAuthenticated() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(43L, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(post("/api/storage/schedule")
+        mockMvc.perform(post("/api/storage/objects/create")
                         .contentType(MediaType.APPLICATION_JSON) // тип передаваемых данных
                         .content(new ObjectMapper().writeValueAsString(dto))
                 )
@@ -123,14 +128,14 @@ public class WorkScheduleIntegrationTest {
     }
 
     /**
-     * Тест добавления объекта в базу данных.
+     * Тестирует эндпоинт создания нового объекта.
      * На входе: не авторизированный пользователь
      */
     @Test
-    public void createWorkScheduleWithForbidden() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(null, "test details", null, null);
+    public void objectCreateIfNotAuthorized() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(43L, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(post("/api/storage/schedule")
+        mockMvc.perform(post("/api/storage/objects/create")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("ROLE_USER")
@@ -143,14 +148,14 @@ public class WorkScheduleIntegrationTest {
 
 
     /**
-     * Тест обновления объекта в базе данных.
+     * Тестирует эндпоинт обновления данных объекта
      * На входе: корректные данные.
      */
     @Test
-    public void updateWorkScheduleWithSuccess() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(workSchedule.getId(), "new test details", null, null);
+    public void objectUpdateWithSuccess() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(50L, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(put("/api/storage/schedule")
+        mockMvc.perform(put("/api/storage/objects/update")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_update"),
@@ -160,19 +165,20 @@ public class WorkScheduleIntegrationTest {
                         .content(new ObjectMapper().writeValueAsString(dto))
                 )
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.id").exists())
-                .andExpect(jsonPath("$.scheduleDetails").value(dto.getScheduleDetails()));
+                .andExpect(jsonPath("$.id").value(50L))
+                .andExpect(jsonPath("$.description").value(dto.getDescription()))
+                .andExpect(jsonPath("$.address").value(dto.getAddress()));
     }
 
     /**
-     * Тест обновления объекта в базе данных.
-     * На входе: не существующий объект.
+     * Тестирует эндпоинт обновления данных объекта
+     * На входе: не корректный Id.
      */
     @Test
-    public void updateWorkScheduleWithBadId() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(null, "new test details", null, null);
+    public void objectUpdateWithBadId() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(43L, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(put("/api/storage/schedule")
+        mockMvc.perform(put("/api/storage/objects/update")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_update"),
@@ -185,15 +191,15 @@ public class WorkScheduleIntegrationTest {
     }
 
     /**
-     * Тест обновления объекта в базе данных.
-     * На входе: не аутентифицированный пользователь
+     * Тестирует эндпоинт обновления данных объекта
+     * На входе: не аутентифицированный пользователь.
      */
     @Test
     @WithAnonymousUser
-    public void updateWorkScheduleWithAnonymousUser() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(workSchedule.getId(), "new test details", null, null);
+    public void objectUpdateIfNotAuthenticated() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(50L, "new description", "K-7", null, null, null, null);
 
-        mockMvc.perform(put("/api/storage/schedule")
+        mockMvc.perform(put("/api/storage/objects/update")
                         .contentType(MediaType.APPLICATION_JSON) // тип передаваемых данных
                         .content(new ObjectMapper().writeValueAsString(dto))
                 )
@@ -201,14 +207,13 @@ public class WorkScheduleIntegrationTest {
     }
 
     /**
-     * Тест обновления объекта в базе данных.
-     * На входе: не авторизированный пользователь
+     * Тестирует эндпоинт обновления данных объекта
+     * На входе: не авторизированный пользователь.
      */
     @Test
-    public void updateWorkScheduleWithForbidden() throws Exception {
-        WorkScheduleDTO dto = new WorkScheduleDTO(workSchedule.getId(), "new test details", null, null);
-
-        mockMvc.perform(put("/api/storage/schedule")
+    public void objectUpdateIfNotAuthorized() throws Exception {
+        ObjectEntityDTO dto = new ObjectEntityDTO(50L, "new description", "K-7", null, null, null, null);
+        mockMvc.perform(put("/api/storage/objects/update")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("ROLE_USER")
@@ -220,14 +225,13 @@ public class WorkScheduleIntegrationTest {
     }
 
 
-
     /**
-     * Тест удаления объекта из базы данных.
+     * Тестирует эндпоинт удаления объекта.
      * На входе: корректные данные.
      */
     @Test
-    public void deleteWorkScheduleWithSuccess() throws Exception {
-        mockMvc.perform(delete("/api/storage/schedule?id=" + workSchedule.getId())
+    public void objectDeleteWithSuccess() throws Exception {
+        mockMvc.perform(delete("/api/storage/objects/delete/" + objectEntity.getId())
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_delete"),
@@ -235,16 +239,16 @@ public class WorkScheduleIntegrationTest {
                                 ))
                 )
                 .andExpect(status().is2xxSuccessful());
-        assertFalse(repository.existsById(workSchedule.getId()));
+        assertFalse(repository.existsById(objectEntity.getId()));
     }
 
     /**
-     * Тест удаления объекта из базы данных.
-     * На входе: не существующий объект.
+     * Тестирует эндпоинт удаления объекта.
+     * На входе: не корректный Id.
      */
     @Test
-    public void deleteWorkScheduleWithBadId() throws Exception {
-        mockMvc.perform(delete("/api/storage/schedule?id=")
+    public void objectDeleteWithBadId() throws Exception {
+        mockMvc.perform(delete("/api/storage/objects/delete/65535")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_delete"),
@@ -255,36 +259,31 @@ public class WorkScheduleIntegrationTest {
     }
 
     /**
-     * Тест удаления объекта из базы данных.
-     * На входе: не аутентифицированный пользователь
+     * Тестирует эндпоинт удаления объекта.
+     * На входе: не аутентифицированный пользователь.
      */
     @Test
     @WithAnonymousUser
-    public void deleteWorkScheduleWithAnonymousUser() throws Exception {
-        mockMvc.perform(delete("/api/storage/schedule?id=" + workSchedule.getId()))
+    public void objectDeleteWithNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/storage/objects/delete/" + objectEntity.getId())
+                )
                 .andExpect(status().isUnauthorized());
-        assertTrue(repository.existsById(workSchedule.getId()));
     }
 
     /**
-     * Тест удаления объекта из базы данных.
-     * На входе: не авторизированный пользователь
+     * Тестирует эндпоинт удаления объекта.
+     * На входе: не аутентифицированный пользователь.
      */
     @Test
-    @WithAnonymousUser
-    public void deleteWorkScheduleWithForbidden() throws Exception {
-        mockMvc.perform(delete("/api/storage/schedule?id=" + workSchedule.getId())
+    public void objectDeleteWithNotAuthorized() throws Exception {
+        mockMvc.perform(delete("/api/storage/objects/delete/" + objectEntity.getId())
                 .with(user("Andrey")
                         .authorities(
                                 new SimpleGrantedAuthority("ROLE_USER")
                         ))
-                )
+        )
                 .andExpect(status().isForbidden());
-        assertTrue(repository.existsById(workSchedule.getId()));
     }
-
-
-
 
 
 }
