@@ -7,17 +7,19 @@ import mr.demonid.storage.service.exceptions.BadPersonException;
 import mr.demonid.storage.service.makers.ObjectMaker;
 import mr.demonid.storage.service.repository.ObjectEntityRepository;
 import mr.demonid.storage.service.services.ObjectEntityService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 

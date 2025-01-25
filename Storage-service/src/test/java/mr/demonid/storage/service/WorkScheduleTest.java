@@ -1,30 +1,23 @@
 package mr.demonid.storage.service;
 
-import mr.demonid.storage.service.domain.ObjectEntity;
 import mr.demonid.storage.service.domain.WorkSchedule;
-import mr.demonid.storage.service.dto.ObjectEntityDTO;
 import mr.demonid.storage.service.dto.WorkScheduleDTO;
 import mr.demonid.storage.service.exceptions.BadScheduleException;
 import mr.demonid.storage.service.makers.WorkScheduleMaker;
 import mr.demonid.storage.service.repository.WorkScheduleRepository;
 import mr.demonid.storage.service.services.WorkScheduleService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.web.servlet.MockMvc;
+import java.util.Optional;
+import java.util.Set;
 
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 

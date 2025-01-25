@@ -7,6 +7,7 @@ import mr.demonid.storage.service.exceptions.BadScheduleException;
 import mr.demonid.storage.service.makers.WorkScheduleMaker;
 import mr.demonid.storage.service.repository.WorkScheduleRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +75,7 @@ public class WorkScheduleService {
     /**
      * Обновление режима работы.
      */
+    @Transactional
     public WorkScheduleDTO update(WorkScheduleDTO request) {
         try {
             Optional<WorkSchedule> scheduleOptional = repository.findById(request.getId());

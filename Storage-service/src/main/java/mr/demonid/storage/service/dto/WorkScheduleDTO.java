@@ -1,9 +1,9 @@
 package mr.demonid.storage.service.dto;
 
-import jakarta.persistence.ManyToMany;
-import lombok.*;
-import mr.demonid.storage.service.domain.ObjectEntity;
-import mr.demonid.storage.service.domain.Person;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -14,7 +14,6 @@ import java.util.Set;
 @Setter
 @ToString
 @NoArgsConstructor
-@AllArgsConstructor
 public class WorkScheduleDTO {
     private Long id;
     private String scheduleDetails;
@@ -22,9 +21,17 @@ public class WorkScheduleDTO {
     private Set<Long> objectsId = new HashSet<>();
     private Set<Long> personsTabNo = new HashSet<>();
 
+
+    public WorkScheduleDTO(Long id, String scheduleDetails, Set<Long> objectsId, Set<Long> personsTabNo) {
+        this.id = id;
+        this.scheduleDetails = scheduleDetails;
+        this.objectsId = objectsId == null ? new HashSet<>() : objectsId;
+        this.personsTabNo = personsTabNo == null ? new HashSet<>() : personsTabNo;
+    }
+
     /*
-    Обеспечиваем уникальность для каждого объекта.
-     */
+        Обеспечиваем уникальность для каждого объекта.
+         */
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
