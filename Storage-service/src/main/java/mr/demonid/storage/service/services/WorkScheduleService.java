@@ -57,10 +57,10 @@ public class WorkScheduleService {
      * Добавление нового режима работы, без зависимостей.
      */
     public WorkScheduleDTO create(WorkScheduleDTO request) {
-        if (request.getId() != null) {
-            throw new BadScheduleException("Режим с таким id уже существует!");
-        }
         try {
+            if (request.getId() != null) {
+                throw new BadScheduleException("Режим с таким id уже существует!");
+            }
             WorkSchedule schedule = maker.toSchedule(request);
             schedule.setObjects(new HashSet<>());
             schedule.setPersons(new HashSet<>());

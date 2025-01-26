@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 //@AutoConfigureMockMvc
-public class WorkScheduleTest {
+public class WorkScheduleServiceTest {
 
     @Mock
     WorkScheduleMaker maker;
@@ -117,6 +117,10 @@ public class WorkScheduleTest {
         when(repository.findById(workSchedule.getId())).thenReturn(Optional.empty());
 
         assertThrows(BadScheduleException.class, () -> service.update(dto));
+    }
+    @Test
+    void updateWorkScheduleWithWorkNull() {
+        assertThrows(BadScheduleException.class, () -> service.update(null));
     }
 
     /*

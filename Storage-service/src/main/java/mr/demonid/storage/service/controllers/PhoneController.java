@@ -63,7 +63,7 @@ public class PhoneController {
     @PreAuthorize("hasAuthority('SCOPE_read')")
     @GetMapping("/get-all")
     public ResponseEntity<List<PhoneDTO>> getAll() {
-        return ResponseEntity.ok(phoneService.getPhones());
+        return ResponseEntity.ok(phoneService.getAllPhones());
     }
 
 

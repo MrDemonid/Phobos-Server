@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.ws.rs.core.MediaType;
 import mr.demonid.storage.service.domain.WorkSchedule;
 import mr.demonid.storage.service.dto.WorkScheduleDTO;
-import mr.demonid.storage.service.exceptions.BadScheduleException;
 import mr.demonid.storage.service.repository.ObjectEntityRepository;
 import mr.demonid.storage.service.repository.PersonRepository;
 import mr.demonid.storage.service.repository.WorkScheduleRepository;
@@ -20,7 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;

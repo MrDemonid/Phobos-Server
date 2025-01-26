@@ -19,11 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -249,6 +245,17 @@ public class ObjectIntegrationTest {
     @Test
     public void objectDeleteWithBadId() throws Exception {
         mockMvc.perform(delete("/api/storage/objects/delete/65535")
+                        .with(user("Andrey")
+                                .authorities(
+                                        new SimpleGrantedAuthority("SCOPE_delete"),
+                                        new SimpleGrantedAuthority("ROLE_USER")
+                                ))
+                )
+                .andExpect(status().isBadRequest());
+    }
+    @Test
+    public void objectDeleteWithSignId() throws Exception {
+        mockMvc.perform(delete("/api/storage/objects/delete/-1")
                         .with(user("Andrey")
                                 .authorities(
                                         new SimpleGrantedAuthority("SCOPE_delete"),

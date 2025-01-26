@@ -76,8 +76,11 @@ public class ObjectEntityServiceTest {
      */
     @Test
     void createObjectEntityWithBadId() {
-        // ставим заглушки
-        assertThrows(BadPersonException.class, () -> objectEntityService.create(dtoNull));
+        assertThrows(BadObjectException.class, () -> objectEntityService.create(dtoNull));
+    }
+    @Test
+    void createObjectEntityWithObjectNull() {
+        assertThrows(BadObjectException.class, () -> objectEntityService.create(null));
     }
 
     /**

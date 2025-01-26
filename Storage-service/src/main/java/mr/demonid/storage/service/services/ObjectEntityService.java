@@ -45,10 +45,10 @@ public class ObjectEntityService {
      * Сервис создания нового объекта.
      */
     public ObjectEntityDTO create(ObjectEntityDTO objectEntityDTO) {
-        if (objectEntityDTO.getId() == null) {
-            throw new BadPersonException("Номер объекта не может быть пустым");
-        }
         try {
+            if (objectEntityDTO.getId() == null) {
+                throw new BadObjectException("Номер объекта не может быть пустым");
+            }
             if (objectRepository.existsById(objectEntityDTO.getId())) {
                 throw new BadObjectException("Такой объект уже существует");
             }

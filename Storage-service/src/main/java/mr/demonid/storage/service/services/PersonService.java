@@ -44,10 +44,10 @@ public class PersonService {
      * Сервис создания нового сотрудника.
      */
     public PersonDTO create(PersonDTO person) {
-        if (person.getTabNo() == null) {
-            throw new BadPersonException("Табельный номер не может быть пустым");
-        }
         try {
+            if (person.getTabNo() == null || person.getTabNo() < 0) {
+                throw new BadPersonException("Табельный номер не может быть пустым");
+            }
             if (personRepository.findByTabNo(person.getTabNo()) != null) {
                 throw new BadPersonException("Такой сотрудник уже существует: " + personRepository.findByTabNo(person.getTabNo()));
             }

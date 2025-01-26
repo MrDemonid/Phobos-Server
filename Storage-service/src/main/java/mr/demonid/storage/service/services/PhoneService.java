@@ -1,6 +1,7 @@
 package mr.demonid.storage.service.services;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import mr.demonid.storage.service.domain.Phone;
 import mr.demonid.storage.service.domain.PhoneType;
 import mr.demonid.storage.service.dto.PhoneDTO;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
+@Log4j2
 public class PhoneService {
 
     private PhoneMaker phoneMaker;
@@ -37,6 +39,7 @@ public class PhoneService {
             throw new BadPhoneException("Телефон не найден");
 
         } catch (Exception e) {
+            log.error("getById(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }
@@ -49,7 +52,7 @@ public class PhoneService {
      */
     public List<PhoneDTO> getPhones(String number, String type) {
         if (number == null && type == null) {
-            return getPhones();
+            return getAllPhones();
         }
         try {
             PhoneFilter phoneFilter = new PhoneFilter(number, type == null ? null : PhoneType.valueOf(type.toUpperCase()));
@@ -59,6 +62,7 @@ public class PhoneService {
             return items.stream().map(phoneMaker::phoneToDto).collect(Collectors.toList());
 
         } catch (Exception e) {
+            log.error("getPhones(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }
@@ -76,6 +80,7 @@ public class PhoneService {
             return phones.stream().map(phoneMaker::phoneToDto).collect(Collectors.toList());
 
         } catch (Exception e) {
+            log.error("searchPhones(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }
@@ -83,12 +88,13 @@ public class PhoneService {
     /**
      * Возвращает список всех телефонов.
      */
-    public List<PhoneDTO> getPhones() {
+    public List<PhoneDTO> getAllPhones() {
         try {
             List<Phone> items = phoneRepository.findAllIdWithDependencies();
             return items.stream().map(phoneMaker::phoneToDto).collect(Collectors.toList());
 
         } catch (Exception e) {
+            log.error("getAllPhones(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }
@@ -97,17 +103,17 @@ public class PhoneService {
      * Добавление нового телефона, без зависимостей.
      */
     public PhoneDTO create(PhoneDTO phone) {
-        if (phone.getId() != null) {
-            throw new BadPhoneException("Такой телефон уже существует!");
-        }
         try {
+            if (phone.getId() != null) {
+                throw new BadPhoneException("Такой телефон уже существует!");
+            }
             phone.setObjectId(null);
             phone.setPersonTabNo(null);
             Phone res = phoneRepository.save(phoneMaker.dtoToPhone(phone));
             return phoneMaker.phoneToDto(res);
 
         } catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
+            log.error("create(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }
@@ -129,6 +135,7 @@ public class PhoneService {
             return phoneMaker.phoneToDto(t);
 
         } catch (Exception e) {
+            log.error("update(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }
@@ -145,6 +152,7 @@ public class PhoneService {
             phoneRepository.deleteById(id);
 
         } catch (Exception e) {
+            log.error("delete(): {}", e.getMessage());
             throw new BadPhoneException(e.getMessage());
         }
     }

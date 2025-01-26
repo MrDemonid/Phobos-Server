@@ -23,7 +23,6 @@ public class PersonMaker {
 
 
     public Person toPerson(PersonDTO dto) {
-        System.out.println("-- maker toPerson --: " + dto);
         return new Person(
                 dto.getTabNo(),
                 dto.getFirstName(),
